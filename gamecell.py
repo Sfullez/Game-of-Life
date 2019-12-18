@@ -1,28 +1,28 @@
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QStyleOption, QStyle, QFrame
+from PyQt5.QtWidgets import QStyleOption, QStyle, QFrame, QSizePolicy
+from PyQt5.QtWidgets import QGraphicsWidget
 
 from events import game_event
 
+
 class GameCell(QFrame):
     """
-    Class that visually represents the cell of the game grid
-    cell_pressed signals the mouse click on a cell of the user manually drawing a pattern on the grid
+    Class that visually represents a cell of the game grid
+    cell_pressed signals the mouse click on a cell by the user manually drawing a pattern on the grid
     """
     cell_pressed = pyqtSignal()
 
-    def __init__(self, row, col, cell_size):
+    def __init__(self, row, col):
         """
         Initializes the cell, assigning it an id to change its style individually and setting its pixel size
         :param row: row of the grid in which the cell is placed
         :param col: column of the grid in which the cell is placed
-        :param cell_size: pixel size of the single cell in the grid
         """
         super().__init__()
         self._id = str(row) + str(col)
-        self.setFrameStyle(QFrame.Box)
-        self.setLineWidth(1)
-        self.setFixedSize(cell_size, cell_size)
+        self.setFrameStyle(QFrame.StyledPanel)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setProperty('id', self._id)
         self.setObjectName(self._id)
         self.update_color(0, 0)
@@ -48,10 +48,6 @@ class GameCell(QFrame):
         """
         return self._id
 
-    def change_size(self, cell_size):
-        # TODO: document it or remove it if not used
-        self.setFixedSize(cell_size)
-
     def update_color(self, value, time):
         """
         Changes the color of the cell based on its value (alive or dead) and, if applicable, calls a dedicated method
@@ -62,7 +58,7 @@ class GameCell(QFrame):
         if value == 1:
             self.recolor(time)
         else:
-            self.setStyleSheet('QWidget#' + self.get_id() + ' { background-color: white}')
+            self.setStyleSheet('QWidget#' + self.get_id() + ' { background-color: #ffffff}')
 
     def paintEvent(self, event):
         """
@@ -82,21 +78,21 @@ class GameCell(QFrame):
         variations and can be adapted to work with less color variations
         :param time: alive time of the cell, used to generate the color
         """
-        if time < 256:
+        if time < 32:
             red = 0
-            green = time
+            green = (time*8)
             blue = 255
-        elif 256 <= time < 512:
+        elif 32 <= time < 64:
             red = 0
             green = 255
-            blue = 511 - time
-        elif 512 <= time < 768:
-            red = time - 512
+            blue = 511 - (time*8)
+        elif 64 <= time < 96:
+            red = (time * 8) - 512
             green = 255
             blue = 0
-        elif 768 <= time < 1024:
+        elif 96 <= time < 128:
             red = 255
-            green = 1023 - time
+            green = 1023 - (time * 8)
             blue = 0
         else:
             return
