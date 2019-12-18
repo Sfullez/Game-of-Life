@@ -1,4 +1,8 @@
+from time import sleep
+
 from PyQt5.QtCore import pyqtSignal, QObject
+
+from events import game_event, window_event
 
 
 class Grid:
@@ -21,7 +25,7 @@ class Grid:
             self._cells.append([])
 
             for col in range(0, cols):
-                self._cells[row].append(Cell(0, 0))
+                self._cells[row].append(Cell())
 
     def get_cell(self, row, col):
         """
@@ -33,6 +37,12 @@ class Grid:
 
         return self._cells[row][col]
 
+    def reset(self):
+        for row in range(0, self._rows):
+            for col in range(0, self._cols):
+                if self._cells[row][col].get_value() == 1:
+                    self._cells[row][col].toggle_value()
+
     def occupied_neighbors(self, row, col):
         """
         Counts the alive neighbors of a given cell in the grid, paying attention to the position of the cell in the grid
@@ -41,7 +51,7 @@ class Grid:
         :returns: an integer representing the number of alive neighbors
         """
 
-        count = 0
+        count = 0  # Keep track of how many alive cells are in the neighborhood
 
         if row > 0:
             count += self._cells[row - 1][col].get_value()
@@ -73,53 +83,62 @@ class Grid:
         """
         Updates in parallel the grid given the set of rules of the Game of Life
         """
-        list_of_changes = {'birth': [], 'survival': [], 'death': []}
+        list_of_changes = {'birth': [], 'survival': [], 'death': []}  # Keep the changes, make them at the end
 
         for row in range(0, self._rows):
             for col in range(0, self._cols):
                 cell_neighbors = self.occupied_neighbors(row, col)
 
-                if self._cells[row][col].get_value():
-                    if cell_neighbors in [2, 3]:  # Surviving cells
+                if self._cells[row][col].get_value():  # If a cell is alive...
+                    if cell_neighbors in [2, 3]:  # ...check if it survives
                         list_of_changes['survival'].append([row, col])
-                    else:  # Dying cells
+                    else:  # ...check if it dies
                         list_of_changes['death'].append([row, col])
-                elif not self._cells[row][col].get_value() and cell_neighbors == 3:  # Newborn cells
+                elif not self._cells[row][col].get_value() and cell_neighbors == 3:  # Check for a cell "birth"
                     list_of_changes['birth'].append([row, col])
 
-        for coords in list_of_changes['birth']:
+        for coords in list_of_changes['birth']:  # Set the newborn cells to 1
             self._cells[coords[0]][coords[1]].toggle_value()
 
-        for coords in list_of_changes['survival']:
+        for coords in list_of_changes['survival']:  # Increase the alive time of a surviving cell
             self._cells[coords[0]][coords[1]].increase_time()
 
-        for coords in list_of_changes['death']:
+        for coords in list_of_changes['death']:  # Set the dying cells to 0 and reset their alive time
             self._cells[coords[0]][coords[1]].toggle_value()
             self._cells[coords[0]][coords[1]].reset_time()
+
+    def state_loop(self):
+        while window_event.is_set():
+            while game_event.is_set() and window_event.is_set():
+                self.update_grid()
+                sleep(1)
 
 
 class Cell(QObject):
     """
     Class that represents the single cell of the grid, holding the state of every single cell
+    cell_changed signals a change in the cell, being the update of its value or alive time
     """
     cell_changed = pyqtSignal(int, int)
 
-    def __init__(self, value, time):
+    def __init__(self):
         """
-        Constructor of the class that sets the attributes
-        :param value:
-        :param time:
+        Constructor of the class that initializes the attributes
         """
         super().__init__()
-        self._value = value if value in [0, 1] else 0  # Checks for not-allowed values
-        self._alive_time = time
+        self._value = 0
+        self._alive_time = 0
 
     def observe(self, slot):
+        """
+        Method used to implement the observable behaviour, connecting a slot to the cell_changed signal
+        :param slot: slot to connect to the cell_pressed signal
+        """
         self.cell_changed.connect(slot)
 
     def get_value(self):
         """
-        Getter of the value of the cell (occupied or empty)
+        Getter of the value of the cell (alive or dead)
         :returns: the value of the cell (1 or 0)
         """
         return self._value
@@ -129,7 +148,7 @@ class Cell(QObject):
         Toggles the value of the cell: 1 if 0, 0 if 1
         """
         self._value = 1 if self._value == 0 else 0
-        self.cell_changed.emit(self._value, self._alive_time)
+        self.cell_changed.emit(self._value, self._alive_time)  # Signal the change of value
 
     def get_alive_time(self):
         """
@@ -139,8 +158,14 @@ class Cell(QObject):
         return self._alive_time
 
     def increase_time(self):
+        """
+        Increases the alive time by 1, used by the game logic to keep track of the alive time of each cell
+        """
         self._alive_time += 1
-        self.cell_changed.emit(self._value, self._alive_time)
+        self.cell_changed.emit(self._value, self._alive_time)  # Signal the change of alive time
 
     def reset_time(self):
-        self._alive_time = 0
+        """
+        Resets the alive time of the cell, used when a cell dies
+        """
+        self._alive_time = 0  # No need to signal the change, since the view is updated by the value toggle

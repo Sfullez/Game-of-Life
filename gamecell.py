@@ -1,47 +1,75 @@
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QWidget, QStyleOption, QStyle
+from PyQt5.QtWidgets import QStyleOption, QStyle, QFrame
 
+from events import game_event
 
-class GameCell(QWidget):
+class GameCell(QFrame):
+    """
+    Class that visually represents the cell of the game grid
+    cell_pressed signals the mouse click on a cell of the user manually drawing a pattern on the grid
+    """
     cell_pressed = pyqtSignal()
 
     def __init__(self, row, col, cell_size):
+        """
+        Initializes the cell, assigning it an id to change its style individually and setting its pixel size
+        :param row: row of the grid in which the cell is placed
+        :param col: column of the grid in which the cell is placed
+        :param cell_size: pixel size of the single cell in the grid
+        """
         super().__init__()
         self._id = str(row) + str(col)
-        self._row = row
-        self._col = col
+        self.setFrameStyle(QFrame.Box)
+        self.setLineWidth(1)
         self.setFixedSize(cell_size, cell_size)
         self.setProperty('id', self._id)
         self.setObjectName(self._id)
         self.update_color(0, 0)
 
     def observe(self, slot):
+        """
+        Method used to implement the observable behaviour, connecting a slot to the cell_pressed signal
+        :param slot: slot to connect to the cell_pressed signal
+        """
         self.cell_pressed.connect(slot)
 
     def mousePressEvent(self, event):
-        self.cell_pressed.emit()
-
-    def get_position(self):
-        return self._row, self._col
+        """
+        Overrides the QWidget method dedicated to handling mouse clicks on the widget
+        """
+        if not game_event.is_set():  # Checks if the game is running or is paused
+            self.cell_pressed.emit()
 
     def get_id(self):
+        """
+        Getter of the id attribute
+        :returns: id of the cell
+        """
         return self._id
 
     def change_size(self, cell_size):
+        # TODO: document it or remove it if not used
         self.setFixedSize(cell_size)
 
     def update_color(self, value, time):
+        """
+        Changes the color of the cell based on its value (alive or dead) and, if applicable, calls a dedicated method
+        for recoloring
+        :param value: indicates whether the cell is alive (1) or dead (0)
+        :param time: time that the cell has been alive, used to obtain a different color based on the cell age
+        """
         if value == 1:
             self.recolor(time)
         else:
             self.setStyleSheet('QWidget#' + self.get_id() + ' { background-color: white}')
 
-        #self.style().unpolish(self)
-        #self.style().polish(self)
-
     def paintEvent(self, event):
-        """Reimplementation of paintEvent to allow for style sheets"""
+        """
+        Specific implementation of the method from QWidget, mandatory for subclasses of QWidget/QFrame when a change of
+        stylesheet is needed at runtime. Code adapted from https://stackoverflow.com/q/18344135/8263997
+        :return:
+        """
         opt = QStyleOption()
         opt.initFrom(self)
         painter = QPainter(self)
@@ -49,6 +77,11 @@ class GameCell(QWidget):
         super().paintEvent(event)
 
     def recolor(self, time):
+        """
+        Custom function to make each cell vary from blue to red based on its age, supports up to 1024 different color
+        variations and can be adapted to work with less color variations
+        :param time: alive time of the cell, used to generate the color
+        """
         if time < 256:
             red = 0
             green = time
@@ -68,5 +101,5 @@ class GameCell(QWidget):
         else:
             return
 
-        color = '#' + format(red, '02x') + format(green, '02x') + format(blue, '02x')
+        color = '#' + format(red, '02x') + format(green, '02x') + format(blue, '02x')  # Converting to hex and string
         self.setStyleSheet('QWidget#' + self.get_id() + ' { background-color:' + color + ' }')
