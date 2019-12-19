@@ -10,17 +10,17 @@ class Grid:
     Class that represents the grid for the game, containing all the cells and methods needed to simulate the population
     """
 
-    def __init__(self, rows, cols, initial_state):
+    def __init__(self, rows, cols):
         """
         Constructor of the class that sets the attributes and initializes all the Cell objects
-        :param rows: number of rows of the grid
-        :param cols: number of columns of the grid
+        :param rows: number of rows of the state grid
+        :param cols: number of columns of the state grid
         """
 
         self._rows = rows
         self._cols = cols
         self._cells = []
-        self._sleep = 0.03
+        self._sleep = 0.03  # By default we set the refresh to (about) 30 Frames Per Second
 
         for row in range(0, rows):
             self._cells.append([])
@@ -28,12 +28,9 @@ class Grid:
             for col in range(0, cols):
                 self._cells[row].append(Cell())
 
-        if initial_state is not None:
-            pass  # TODO: make a method that loads a previous state
-
     def get_cell(self, row, col):
         """
-        Selects a cell from the grid
+        Selects a cell from the state grid
         :param row: row from which the cell must be selected
         :param col: column from which the cell must be selected
         :returns: a Cell object from the _cells list
@@ -42,6 +39,11 @@ class Grid:
         return self._cells[row][col]
 
     def get_dimensions(self):
+        """
+        Method used to retrieve the number of rows and columns of the state grid
+        :returns: the number of rows and columns of the state grid
+        """
+
         return self._rows, self._cols
 
     def reset(self):
@@ -56,7 +58,7 @@ class Grid:
                 if cell.get_value() == 1:  # Toggles only the occupied cells, avoiding unnecessary propagation
                     cell.toggle_value()
 
-    def occupied_neighbors(self, row, col):
+    def alive_neighbors(self, row, col):
         """
         Counts the alive neighbors of a given cell in the grid, paying attention to the position of the cell in the grid
         :param row: row of the cell to count the neighbors of
@@ -94,14 +96,15 @@ class Grid:
 
     def update_grid(self):
         """
-        Updates in parallel the grid given the set of rules of the Game of Life
+        Updates in parallel the grid given the set of rules of the Game of Life, applying changes only after having
+        calculated them all
         """
 
         list_of_changes = {'birth': [], 'survival': [], 'death': []}  # Keep the changes, make them at the end
 
         for row in range(0, self._rows):
             for col in range(0, self._cols):
-                cell_neighbors = self.occupied_neighbors(row, col)
+                cell_neighbors = self.alive_neighbors(row, col)  # Computes the number of alive neighbors of the cell
 
                 if self._cells[row][col].get_value():  # If a cell is alive...
                     if cell_neighbors in [2, 3]:  # ...check if it survives
@@ -123,7 +126,7 @@ class Grid:
 
     def get_sleep(self):
         """
-        Getter of _sleep
+        Getter of the sleep time used to set the number of frames per second caused by the state grid update
         :returns: an integer representing the value of _sleep
         """
 
@@ -132,6 +135,7 @@ class Grid:
     def set_sleep(self, fps):
         """
         Method that sets the _sleep value to render the target number of frames per second
+        :param fps: number of frames per second the user wants to achieve
         """
 
         self._sleep = round(1/fps, 3)
@@ -143,9 +147,9 @@ class Grid:
 
         while window_event.is_set():  # Checks if the main window is present
             while game_event.is_set() and window_event.is_set():  # Checks if the game is not paused
-                self.update_grid()
-                sleep(self._sleep)
-            sleep(0.1)
+                self.update_grid()  # Periodically updates the state grid
+                sleep(self._sleep)  # Sleeps for a precise amount of time to achieve the target FPS
+            sleep(0.1)  # Sleeps to prevent an high CPU usage while waiting for the state loop to begin anew
 
 
 class Cell(QObject):
@@ -158,7 +162,7 @@ class Cell(QObject):
 
     def __init__(self):
         """
-        Constructor of the class that initializes the attributes
+        Constructor of the class that initializes the only two attributes
         """
 
         super().__init__()
@@ -210,6 +214,7 @@ class Cell(QObject):
     def set_time(self, value):
         """
         Sets the alive time at a precise value, used by the game logic to load a previously saved state
+        :param value: new value of the alive time to be set
         """
         self._alive_time = value  # No signal emitting since we call toggle_value after this
 

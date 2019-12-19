@@ -11,6 +11,7 @@ class GameCell(QFrame):
     Class that visually represents a cell of the game grid
     cell_pressed signals the mouse click on a cell by the user manually drawing a pattern on the grid
     """
+
     cell_pressed = pyqtSignal()
 
     def __init__(self, row, col):
@@ -19,33 +20,37 @@ class GameCell(QFrame):
         :param row: row of the grid in which the cell is placed
         :param col: column of the grid in which the cell is placed
         """
+
         super().__init__()
-        self._id = str(row) + str(col)
+        self._id = str(row) + str(col)  # Creates a unique id for the cell, used to change its color with a stylesheet
         self.setFrameStyle(QFrame.StyledPanel)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setProperty('id', self._id)
+        self.setProperty('id', self._id)  # Sets the previously generated id as property of the cell
         self.setObjectName(self._id)
-        self.update_color(0, 0)
+        self.update_color(0, 0)  # Initial recolor to set the cell as white
 
     def observe(self, slot):
         """
         Method used to implement the observable behaviour, connecting a slot to the cell_pressed signal
         :param slot: slot to connect to the cell_pressed signal
         """
+
         self.cell_pressed.connect(slot)
 
     def mousePressEvent(self, event):
         """
         Overrides the QWidget method dedicated to handling mouse clicks on the widget
         """
-        if not game_event.is_set():  # Checks if the game is running or is paused
-            self.cell_pressed.emit()
+
+        if not game_event.is_set():  # Checks if the game is running or is paused...
+            self.cell_pressed.emit()  # ...and is it not running, enables the cell pressing with the mouse click
 
     def get_id(self):
         """
         Getter of the id attribute
         :returns: id of the cell
         """
+
         return self._id
 
     def update_color(self, value, time):
@@ -55,17 +60,18 @@ class GameCell(QFrame):
         :param value: indicates whether the cell is alive (1) or dead (0)
         :param time: time that the cell has been alive, used to obtain a different color based on the cell age
         """
-        if value == 1:
+
+        if value == 1:  # If the cell is alive, it is recolored based on its time...
             self.recolor(time)
-        else:
+        else:  # ...otherwise it is just white
             self.setStyleSheet('QWidget#' + self.get_id() + ' { background-color: #ffffff}')
 
     def paintEvent(self, event):
         """
         Specific implementation of the method from QWidget, mandatory for subclasses of QWidget/QFrame when a change of
         stylesheet is needed at runtime. Code adapted from https://stackoverflow.com/q/18344135/8263997
-        :return:
         """
+
         opt = QStyleOption()
         opt.initFrom(self)
         painter = QPainter(self)
@@ -75,9 +81,11 @@ class GameCell(QFrame):
     def recolor(self, time):
         """
         Custom function to make each cell vary from blue to red based on its age, supports up to 1024 different color
-        variations and can be adapted to work with less color variations
+        variations and can be adapted to work with less color variations (limited to 128 different colors to quickly see
+        cells aging)
         :param time: alive time of the cell, used to generate the color
         """
+
         if time < 32:
             red = 0
             green = (time*8)
