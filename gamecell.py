@@ -1,7 +1,6 @@
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QStyleOption, QStyle, QFrame, QSizePolicy
-from PyQt5.QtWidgets import QGraphicsWidget
+from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtWidgets import QFrame, QSizePolicy
 
 from events import game_event
 
@@ -22,11 +21,10 @@ class GameCell(QFrame):
         """
 
         super().__init__()
+        self.setAutoFillBackground(True)  # Necessary for the cell recolor done later
         self._id = str(row) + str(col)  # Creates a unique id for the cell, used to change its color with a stylesheet
         self.setFrameStyle(QFrame.StyledPanel)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setProperty('id', self._id)  # Sets the previously generated id as property of the cell
-        self.setObjectName(self._id)
         self.update_color(0, 0)  # Initial recolor to set the cell as white
 
     def observe(self, slot):
@@ -64,19 +62,9 @@ class GameCell(QFrame):
         if value == 1:  # If the cell is alive, it is recolored based on its time...
             self.recolor(time)
         else:  # ...otherwise it is just white
-            self.setStyleSheet('QWidget#' + self.get_id() + ' { background-color: #ffffff}')
-
-    def paintEvent(self, event):
-        """
-        Specific implementation of the method from QWidget, mandatory for subclasses of QWidget/QFrame when a change of
-        stylesheet is needed at runtime. Code adapted from https://stackoverflow.com/q/18344135/8263997
-        """
-
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PE_Widget, opt, painter, self)
-        super().paintEvent(event)
+            palette = QPalette()  # Create a palette
+            palette.setColor(QPalette.Background, QColor(255, 255, 255))  # Set its color to white
+            self.setPalette(palette)  # Change the cell palette
 
     def recolor(self, time):
         """
@@ -105,5 +93,6 @@ class GameCell(QFrame):
         else:
             return
 
-        color = '#' + format(red, '02x') + format(green, '02x') + format(blue, '02x')  # Converting to hex and string
-        self.setStyleSheet('QWidget#' + self.get_id() + ' { background-color:' + color + ' }')
+        palette = QPalette()  # Create a new palette
+        palette.setColor(QPalette.Background, QColor(red, green, blue))  # Set its color to the one calculated
+        self.setPalette(palette)  # Change the cell palette
