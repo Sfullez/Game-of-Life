@@ -1,7 +1,3 @@
-import sys
-
-from PyQt5.QtWidgets import QApplication
-
 from events import window_event
 from mainwindow import MainWindow
 from settingswindow import SettingsWindow
@@ -57,11 +53,3 @@ class WindowManager:
         window_event.set()  # The window event is set...
         self._main_window.start_loop()  # ...so the game main loop can start and wait for the user to start the game
         self._main_window.show()
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    wm = WindowManager()
-    wm.open_settings()
-    app.exec_()
-    window_event.clear()

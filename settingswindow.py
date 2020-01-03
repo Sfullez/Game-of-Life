@@ -22,7 +22,7 @@ class SettingsWindow(QMainWindow):
 
         super().__init__()
         self._state = state
-        self.setWindowTitle("Conway's Game of Life Remastered setup")
+        self.setWindowTitle("Conway's Game of Life Remastered settings")
         self.main_widget = QWidget()
         self.main_layout = SettingsLayout(self.change_window)
         self.main_widget.setLayout(self.main_layout)
@@ -85,9 +85,9 @@ class SettingsLayout(QFormLayout):
         line.setFrameShadow(QFrame.Sunken)
         self.addRow(line)
 
-        self.save_button = QPushButton("Save")
-        self.save_button.clicked.connect(self.save_pressed)
-        self.addRow(self.save_button)
+        self.open_button = QPushButton("Start game")
+        self.open_button.clicked.connect(self.save_pressed)
+        self.addRow(self.open_button)
 
     def load_file(self):
         """
