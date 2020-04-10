@@ -21,6 +21,9 @@ Extra features:
 
  - Python 3
  - PyQT 5 (available through `pip` or `minicoda`/`anaconda`)
+ 
+## Known bugs
+ - The first window resize doesn't do anything, caused by the overloading of the resize method of a PyQT object; all subsequent resizes work as intended
 
 ## How to run the game
 It can be started simply via terminal using
