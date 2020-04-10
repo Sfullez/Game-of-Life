@@ -23,8 +23,8 @@ class GameCell(QFrame):
         super().__init__()
         self.setAutoFillBackground(True)  # Necessary for the cell recolor done later
         self._id = str(row) + str(col)  # Creates a unique id for the cell, used to change its color with a stylesheet
-        self.setFrameStyle(QFrame.StyledPanel)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setFrameStyle(QFrame.StyledPanel) # Style used to create the cell border and enable the recoloring
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) # Size policy that auto resizes with the window
         self.update_color(0, 0)  # Initial recolor to set the cell as white
 
     def observe(self, slot):

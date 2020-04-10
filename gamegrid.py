@@ -3,54 +3,6 @@ from gamestate import Grid
 from gamecell import GameCell
 
 
-class GameViewGrid(QGraphicsGridLayout):
-    def __init__(self, rows, cols, initial_state):
-        super().__init__()
-        self.setHorizontalSpacing(0)
-        self.setVerticalSpacing(0)
-        self._stategrid = Grid(rows, cols, initial_state)
-        self._rows = rows
-        self._cols = cols
-        self._grid = []
-
-        for row in range(0, rows):
-            self._grid.append([])
-
-            for col in range(0, cols):
-                game_cell = GameCell(row, col)  # Creates a new "visual" cell
-                state_cell = self._stategrid.get_cell(row, col)  # Gets the corresponding state cell
-                state_cell.observe(game_cell.update_color)  # Connects the color update to a change in the model cell
-                game_cell.observe(state_cell.toggle_value)  # Connects the model update to a click in the "visual" cell
-                self._grid[row].append(game_cell)
-                self.addItem(game_cell, row, col)
-
-        if len(initial_state) > 0:
-            for row in range(0, rows):
-                for col in range(0, cols):
-                    if initial_state[row][col][0] == 1:
-                        self._stategrid.get_cell(row, col).set_time(initial_state[row][col][1])
-                        self._stategrid.get_cell(row, col).toggle_value()
-
-        self.update_grid()
-
-    def reset(self):
-        self._stategrid.reset()
-
-    def update_grid(self):
-        """
-        Update of the game grid, invoked by the game loop at the desired rate, that changes the color of every cell
-        """
-
-        for row in range(0, self._rows):
-            for col in range(0, self._cols):
-                occupied = self._stategrid.get_cell(row, col).get_value()
-                time = self._stategrid.get_cell(row, col).get_time()
-                self._grid[row][col].update_color(occupied, time)
-
-    def get_state_grid(self):
-        return self._stategrid
-
-
 class GameGrid(QGridLayout):
     """
     Class that visually represents the game grid using a QGridLayout
@@ -94,14 +46,14 @@ class GameGrid(QGridLayout):
 
     def heightForWidth(self, width):
         """
-        Overridden method to maintain a square ratio of the grid. Currently not working.
+        Overridden method to maintain a square ratio of the grid
         """
 
         return width
 
     def hasHeightForWidth(self):
         """
-        Overridden method to maintain a square ratio of the grid. Currently not working.
+        Overridden method to maintain a square ratio of the grid
         """
 
         return True
@@ -120,9 +72,9 @@ class GameGrid(QGridLayout):
 
         for row in range(0, self._rows):
             for col in range(0, self._cols):
-                occupied = self._stategrid.get_cell(row, col).get_value()
-                time = self._stategrid.get_cell(row, col).get_time()
-                self._grid[row][col].update_color(occupied, time)
+                occupied = self._stategrid.get_cell(row, col).get_value() # Check if the cell is populated
+                time = self._stategrid.get_cell(row, col).get_time() # Get the alive time of the cell
+                self._grid[row][col].update_color(occupied, time) # Trigger the cell recolor
 
     def get_state_grid(self):
         """

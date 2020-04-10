@@ -68,29 +68,29 @@ class Grid:
 
         count = 0  # Keeps track of how many alive cells are in the neighborhood
 
-        if row > 0:
-            count += self._cells[row - 1][col].get_value()
+        if row > 0: # Checks if there is an upper row
+            count += self._cells[row - 1][col].get_value() # Gets the value of the cell immediately above
 
-            if col > 0:
-                count += self._cells[row - 1][col - 1].get_value()
+            if col > 0: # Checks if there is a column to the left
+                count += self._cells[row - 1][col - 1].get_value() # Gets the value of the cell at its top left
 
-            if col < self._cols - 1:
-                count += self._cells[row - 1][col + 1].get_value()
+            if col < self._cols - 1: # Checks if there is a column to the right
+                count += self._cells[row - 1][col + 1].get_value() # Gets the value of the cell at its top right
 
-        if row < self._rows - 1:
-            count += self._cells[row + 1][col].get_value()
+        if row < self._rows - 1: # Cheks if there is a lower row
+            count += self._cells[row + 1][col].get_value() # Gets the value of the cell immediately below
 
-            if col > 0:
-                count += self._cells[row + 1][col - 1].get_value()
+            if col > 0: # Checks if there is a column to the left
+                count += self._cells[row + 1][col - 1].get_value() # Gets the value of the cell at its bottom left
 
-            if col < self._cols - 1:
-                count += self._cells[row + 1][col + 1].get_value()
+            if col < self._cols - 1: # Checks if there is a column to the right
+                count += self._cells[row + 1][col + 1].get_value() # Gets the value of the cell at its bottom right
 
-        if col > 0:
-            count += self._cells[row][col - 1].get_value()
+        if col > 0: # Checks if there is a column to the left
+            count += self._cells[row][col - 1].get_value() # Gets the value of the cell at its left
 
-        if col < self._cols - 1:
-            count += self._cells[row][col + 1].get_value()
+        if col < self._cols - 1: # Checks if there is a column to the right
+            count += self._cells[row][col + 1].get_value() # Gets the value of the cell at its right
 
         return count
 
@@ -100,7 +100,7 @@ class Grid:
         calculated them all
         """
 
-        list_of_changes = {'birth': [], 'survival': [], 'death': []}  # Keep the changes, make them at the end
+        list_of_changes = {'birth': [], 'survival': [], 'death': []}  # Keep the changes, apply them at the end
 
         for row in range(0, self._rows):
             for col in range(0, self._cols):
@@ -108,11 +108,11 @@ class Grid:
 
                 if self._cells[row][col].get_value():  # If a cell is alive...
                     if cell_neighbors in [2, 3]:  # ...check if it survives
-                        list_of_changes['survival'].append([row, col])
+                        list_of_changes['survival'].append([row, col]) # Add it to the surviving cells
                     else:  # ...check if it dies
-                        list_of_changes['death'].append([row, col])
+                        list_of_changes['death'].append([row, col]) # Add it to the dead cells
                 elif not self._cells[row][col].get_value() and cell_neighbors == 3:  # Check for a cell "birth"
-                    list_of_changes['birth'].append([row, col])
+                    list_of_changes['birth'].append([row, col]) # Add it to the newborn cells
 
         for coords in list_of_changes['birth']:  # Set the newborn cells to 1
             self._cells[coords[0]][coords[1]].toggle_value()
@@ -149,7 +149,7 @@ class Grid:
             while game_event.is_set() and window_event.is_set():  # Checks if the game is not paused
                 self.update_grid()  # Periodically updates the state grid
                 sleep(self._sleep)  # Sleeps for a precise amount of time to achieve the target FPS
-            sleep(0.1)  # Sleeps to prevent an high CPU usage while waiting for the state loop to begin anew
+            sleep(0.1)  # Sleeps to prevent a high CPU usage while waiting for the state loop to begin anew
 
 
 class Cell(QObject):
@@ -197,7 +197,7 @@ class Cell(QObject):
 
     def get_time(self):
         """
-        Getter of the number of time ticks in which the cell has been occupied
+        Getter of the number of time units in which the cell has been occupied
         :return: the value of the occupied time
         """
 
